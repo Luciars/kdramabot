@@ -53,7 +53,7 @@ async def show_episode(ctx, name):
 
 @bot.command(name='add', help='Adds show to list of shows user is currently watching')
 async def add_show(ctx, name: str, episode: int):
-    curr.execute("INSERT INTO drama VALUES (?,?,?)", (name.title(), episode))
+    curr.execute("INSERT INTO drama(name,episode) VALUES (?,?)", (name.title(), episode))
     conn.commit()
     await ctx.send("Added %s to the list of shows" % name.title())
 
