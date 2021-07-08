@@ -7,6 +7,7 @@ import sqlite3
 import math
 from dotenv import load_dotenv
 from datetime import datetime
+from humanize_date import humanize_date
 
 load_dotenv()
 
@@ -66,25 +67,27 @@ async def drop_show(ctx, name):
     await ctx.send("No longer watching %s" % name.title())
 
 
-@bot.command(name="when", help="Shows the next stream of a certain show")
+@bot.command(name="test-when", help="Shows the next stream of a certain show")
 async def when_next_show(ctx, show_name: str):
     watch_time = curr.execute("SELECT time from watch_times where name = ?", (show_name.title(),)).fetchone()
     if watch_time is None:
         await ctx.send("There's no plans to watch %s right, we should book one" % show_name.title())
         return
 
-    if datetime.strptime(watch_time[0], '%Y-%m-%d %H:%M:%S') < datetime.now():
-        await ctx.send("You missed the viewing of %s" % show_name.title())
-        curr.execute("DELETE FROM watch_times where name = ?", (show_name.title()))
-        conn.commit()
-        return
-
-    await ctx.send("We'll be watching %s at %s" % (show_name.title(), watch_time[0]))
+    time = datetime.strptime(watch_time[0], '%Y-%m-%d %H:%M:%S')
+    if time < datetime.now():
+        await ctx.send("Aww we already watched %s %s" % (show_name.title(), humanize_date(time)))
+    else:
+        await ctx.send("We'll be watching %s %s" % (show_name.title(), humanize_date(time)))
 
 
-@bot.command(name="next", help="Set when to watch next episode")
+@bot.command(name="test-next", help="Set when to watch next episode")
 async def set_next_show(ctx, show_name: str, next_time: str):
-    curr.execute("INSERT into watch_times(name, time) VALUES (?,datetime(?))", (show_name.title(), next_time))
+    if curr.execute("SELECT COUNT(*) from watch_times WHERE name = ?", (show_name.title(),)).fetchone()[0] > 0:
+        curr.execute("UPDATE watch_times SET time = datetime(?) WHERE name = ?", (next_time, show_name.title(),))
+        conn.commit()
+    else:
+        curr.execute("INSERT into watch_times(name, time) VALUES (?,datetime(?))", (show_name.title(), next_time,))
     conn.commit()
     await ctx.send("Okay! We'll watch %s at %s" % (show_name.title(), next_time))
 
