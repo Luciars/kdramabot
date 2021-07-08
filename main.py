@@ -67,7 +67,7 @@ async def drop_show(ctx, name):
     await ctx.send("No longer watching %s" % name.title())
 
 
-@bot.command(name="test-when", help="Shows the next stream of a certain show")
+@bot.command(name="when", help="Shows the next stream of a certain show")
 async def when_next_show(ctx, show_name: str):
     watch_time = curr.execute("SELECT time from watch_times where name = ?", (show_name.title(),)).fetchone()
     if watch_time is None:
@@ -81,7 +81,7 @@ async def when_next_show(ctx, show_name: str):
         await ctx.send("We'll be watching %s %s" % (show_name.title(), humanize_date(time)))
 
 
-@bot.command(name="test-next", help="Set when to watch next episode")
+@bot.command(name="next", help="Set when to watch next episode")
 async def set_next_show(ctx, show_name: str, next_time: str):
     if curr.execute("SELECT COUNT(*) from watch_times WHERE name = ?", (show_name.title(),)).fetchone()[0] > 0:
         curr.execute("UPDATE watch_times SET time = datetime(?) WHERE name = ?", (next_time, show_name.title(),))
